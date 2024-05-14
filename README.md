@@ -1,37 +1,175 @@
-# 🌡️ TermIA: Termostato Inteligente con Consulta a API de Clima 🌤️
+# 🤖 Bot de Telegram para Controlar LED Integrado 🚀
 
-## Descripción
+¡Bienvenido a tu nuevo proyecto de bot en Telegram! Este bot se hace pasar por una IA y permite a los usuarios interactuar con él para controlar un LED integrado. Usa comandos sencillos como `ledon` y `ledoff` para encender y apagar el LED. ¡Sigue leyendo para más detalles!
 
-¡Bienvenido a TermIA! Este proyecto es un termostato inteligente conectado a Internet que utiliza una API de clima para obtener información sobre la temperatura exterior actual. La inteligencia artificial (IA) integrada en TermIA analiza estos datos junto con los patrones de temperatura interior para ofrecerte el máximo confort y eficiencia energética en tu hogar.
+## 📋 Descripción del Proyecto
 
-### Funcionalidades Principales
+Este proyecto utiliza un ESP32 o ESP8266 para conectarse a Wi-Fi y controlar un LED mediante comandos enviados a través de un bot de Telegram. El bot responde a comandos específicos para encender, apagar y verificar el estado del LED.
 
-- **Consulta a API de Clima:** 🌐 El termostato se conecta a una API de clima para obtener datos precisos sobre la temperatura exterior en tiempo real.
-- **Análisis de Datos:** 📊 La IA analiza los datos del clima exterior y los patrones de temperatura interior para tomar decisiones inteligentes.
-- **Optimización del Confort:** 😌 Basándose en el análisis de datos, TermIA ajusta la temperatura para ofrecerte el máximo confort en todo momento.
-- **Eficiencia Energética:** 💡 La IA recomienda acciones para maximizar la eficiencia energética, como el uso de ventilación natural en lugar de sistemas de climatización.
-- **Interfaz de Usuario Intuitiva:** 🖥️ TermIA cuenta con una interfaz de usuario intuitiva para que puedas interactuar fácilmente con él y recibir recomendaciones de confort.
+## 🚀 Comenzando
 
-## Uso
+### Requisitos
 
-1. **Configuración Inicial:** 🛠️ Conecta el termostato a la red Wi-Fi y configura la API de clima para obtener datos actualizados.
-2. **Interacción con la IA:** 💬 Los usuarios pueden interactuar con la IA para recibir recomendaciones sobre la configuración óptima del termostato.
-3. **Visualización de Datos:** 📈 Puedes visualizar los datos del clima exterior y los patrones de temperatura interior a través de la interfaz de usuario del termostato o una aplicación móvil complementaria.
+- Una placa ESP32 o ESP8266
+- Conexión a Internet
+- Cuenta de Telegram
 
-## Contribución
+### Configuración
 
-¡Las contribuciones son bienvenidas! Si deseas contribuir a TermIA, sigue estos pasos:
+1. **Clona el repositorio:**
+   ```bash
+   git clone https://github.com/tu-usuario/tu-repo.git
+   cd tu-repo
+   ```
 
-1. Realiza un fork del repositorio.
-2. Crea una rama para tu funcionalidad (`git checkout -b feature/NuevaFuncionalidad`).
-3. Realiza tus cambios y haz commit de ellos (`git commit -am 'Añade una nueva funcionalidad'`).
-4. Haz push a la rama (`git push origin feature/NuevaFuncionalidad`).
-5. Abre un Pull Request.
+2. **Instala las librerías necesarias:**
+   - [Universal Telegram Bot Library](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)
+   - [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
 
-## Créditos
+3. **Configura las credenciales Wi-Fi y el token del bot:**
+   En el archivo `main.ino`, reemplaza las siguientes líneas con tus credenciales:
+   ```cpp
+   const char* ssid = "TU_SSID";
+   const char* password = "TU_PASSWORD";
+   #define BOTtoken "TU_BOT_TOKEN"  // Token del bot de Telegram
+   #define CHAT_ID "TU_CHAT_ID"  // ID del chat de Telegram
+   ```
 
-TermIA es desarrollado por [Tu Nombre](enlace a tu perfil de GitHub) y está inspirado en la necesidad de combinar tecnología IoT y IA para mejorar el confort y la eficiencia energética en nuestros hogares.
+### Uso
 
-## Licencia
+Carga el código en tu ESP32 o ESP8266 y abre el monitor serie para ver los mensajes de depuración. Asegúrate de que tu dispositivo esté conectado a la red Wi-Fi.
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para obtener más detalles.
+### Comandos del Bot
+
+- `/start` - Muestra un mensaje de bienvenida y lista de comandos.
+- `/led_on` - Enciende el LED.
+- `/led_off` - Apaga el LED.
+- `/state` - Muestra el estado actual del LED (encendido/apagado).
+
+## 🔧 Código
+
+```cpp
+#ifdef ESP32
+  #include <WiFi.h>
+#else
+  #include <ESP8266WiFi.h>
+#endif
+#include <WiFiClientSecure.h>
+#include <UniversalTelegramBot.h>   
+#include <ArduinoJson.h>
+
+const char* ssid = "TU_SSID";
+const char* password = "TU_PASSWORD";
+#define BOTtoken "TU_BOT_TOKEN"
+#define CHAT_ID "TU_CHAT_ID"
+
+#ifdef ESP8266
+  X509List cert(TELEGRAM_CERTIFICATE_ROOT);
+#endif
+
+WiFiClientSecure client;
+UniversalTelegramBot bot(BOTtoken, client);
+int botRequestDelay = 1000;
+unsigned long lastTimeBotRan;
+const int ledPin = 2;
+bool ledState = LOW;
+
+void handleNewMessages(int numNewMessages) {
+  Serial.println("handleNewMessages");
+  Serial.println(String(numNewMessages));
+
+  for (int i=0; i<numNewMessages; i++) {
+    String chat_id = String(bot.messages[i].chat_id);
+    if (chat_id != CHAT_ID){
+      bot.sendMessage(chat_id, "Usuario no autorizado", "");
+      continue;
+    }
+
+    String text = bot.messages[i].text;
+    Serial.println(text);
+    String from_name = bot.messages[i].from_name;
+
+    if (text == "/start") {
+      String welcome = "Bienvenido, " + from_name + ".\n";
+      welcome += "Usa los siguientes comandos para controlar el LED.\n\n";
+      welcome += "/led_on para encender el LED \n";
+      welcome += "/led_off para apagar el LED \n";
+      welcome += "/state para ver el estado actual del LED \n";
+      bot.sendMessage(chat_id, welcome, "");
+    }
+
+    if (text == "/led_on") {
+      bot.sendMessage(chat_id, "LED encendido", "");
+      ledState = HIGH;
+      digitalWrite(ledPin, ledState);
+    }
+
+    if (text == "/led_off") {
+      bot.sendMessage(chat_id, "LED apagado", "");
+      ledState = LOW;
+      digitalWrite(ledPin, ledState);
+    }
+
+    if (text == "/state") {
+      if (digitalRead(ledPin)){
+        bot.sendMessage(chat_id, "El LED está encendido", "");
+      } else {
+        bot.sendMessage(chat_id, "El LED está apagado", "");
+      }
+    }
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  
+  #ifdef ESP8266
+    configTime(0, 0, "pool.ntp.org");
+    client.setTrustAnchors(&cert);
+  #endif
+
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, ledState);
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  #ifdef ESP32
+    client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
+  #endif
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Conectando a WiFi...");
+  }
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  if (millis() > lastTimeBotRan + botRequestDelay)  {
+    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+
+    while(numNewMessages) {
+      Serial.println("respuesta recibida");
+      handleNewMessages(numNewMessages);
+      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
+    }
+    lastTimeBotRan = millis();
+  }
+}
+```
+
+## 🤝 Contribuciones
+
+¡Las contribuciones son bienvenidas! Si tienes alguna mejora o nueva funcionalidad que te gustaría añadir, por favor abre un issue o envía un pull request.
+
+## 📄 Licencia
+
+Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+
+## 🌟 Agradecimientos
+
+- [Brian Lough](https://github.com/witnessmenow) por la fantástica [librería Universal Telegram Bot](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot).
+
+¡Gracias por usar este proyecto! Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarme.
+
+---
+¡Diviértete controlando tu LED con Telegram! 🚀💡
