@@ -35,9 +35,12 @@ Este proyecto utiliza un ESP32 o ESP8266 para conectarse a Wi-Fi y controlar un 
    #define CHAT_ID "TU_CHAT_ID"  // ID del chat de Telegram
    ```
 
-### Uso
+### Uso y ejemplo
 
 Carga el código en tu ESP32 o ESP8266 y abre el monitor serie para ver los mensajes de depuración. Asegúrate de que tu dispositivo esté conectado a la red Wi-Fi.
+
+![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/4b6ceb3f-7fbf-44e6-aaca-fe37f9e03f8f)
+
 
 ### Comandos del Bot
 
