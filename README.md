@@ -1,4 +1,4 @@
-# 🤖 Bot de Telegram para Controlar LED Integrado 🚀
+# 🤖 AILedMaster 🚀
 
 ¡Bienvenido a tu nuevo proyecto de bot en Telegram! Este bot se hace pasar por una IA y permite a los usuarios interactuar con él para controlar un LED integrado. Usa comandos sencillos como `ledon` y `ledoff` para encender y apagar el LED. ¡Sigue leyendo para más detalles!
 
