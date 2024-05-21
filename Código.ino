@@ -1,106 +1,65 @@
-#ifdef ESP32
-  #include <WiFi.h>
-#else
-  #include <ESP8266WiFi.h>
-#endif
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>   
-#include <ArduinoJson.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 
-const char* ssid = "TU_SSID";
-const char* password = "TU_PASSWORD";
-#define BOTtoken "TU_BOT_TOKEN"
-#define CHAT_ID "TU_CHAT_ID"
+// SSID y contraseña de tu red WiFi
+const char* ssid = "";  // Reemplaza con tu SSID
+const char* password = "";  // Reemplaza con tu contraseña
 
-#ifdef ESP8266
-  X509List cert(TELEGRAM_CERTIFICATE_ROOT);
-#endif
+// Definición del pin GPIO al que está conectada la luz
+const int LED_PIN = 2;  // Cambia esto según el pin que estés usando
 
-WiFiClientSecure client;
-UniversalTelegramBot bot(BOTtoken, client);
-int botRequestDelay = 1000;
-unsigned long lastTimeBotRan;
-const int ledPin = 2;
-bool ledState = LOW;
+ESP8266WebServer server(80);
 
-void handleNewMessages(int numNewMessages) {
-  Serial.println("handleNewMessages");
-  Serial.println(String(numNewMessages));
+// Función para manejar CORS
+void handleCors() {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+  server.send(204);  // Sin contenido para las solicitudes OPTIONS
+}
 
-  for (int i=0; i<numNewMessages; i++) {
-    String chat_id = String(bot.messages[i].chat_id);
-    if (chat_id != CHAT_ID){
-      bot.sendMessage(chat_id, "Usuario no autorizado", "");
-      continue;
-    }
+// Función para manejar la solicitud de encender la luz
+void handleEncender() {
+  digitalWrite(LED_PIN, HIGH);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/plain", "Luz encendida");
+}
 
-    String text = bot.messages[i].text;
-    Serial.println(text);
-    String from_name = bot.messages[i].from_name;
-
-    if (text == "/start") {
-      String welcome = "Bienvenido, " + from_name + ".\n";
-      welcome += "Usa los siguientes comandos para controlar el LED.\n\n";
-      welcome += "/led_on para encender el LED \n";
-      welcome += "/led_off para apagar el LED \n";
-      welcome += "/state para ver el estado actual del LED \n";
-      bot.sendMessage(chat_id, welcome, "");
-    }
-
-    if (text == "/led_on") {
-      bot.sendMessage(chat_id, "LED encendido", "");
-      ledState = HIGH;
-      digitalWrite(ledPin, ledState);
-    }
-
-    if (text == "/led_off") {
-      bot.sendMessage(chat_id, "LED apagado", "");
-      ledState = LOW;
-      digitalWrite(ledPin, ledState);
-    }
-
-    if (text == "/state") {
-      if (digitalRead(ledPin)){
-        bot.sendMessage(chat_id, "El LED está encendido", "");
-      } else {
-        bot.sendMessage(chat_id, "El LED está apagado", "");
-      }
-    }
-  }
+// Función para manejar la solicitud de apagar la luz
+void handleApagar() {
+  digitalWrite(LED_PIN, LOW);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/plain", "Luz apagada");
 }
 
 void setup() {
+  // Inicializar el pin GPIO para la luz
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW); // Asegúrate de que la luz está apagada al inicio
+
+  // Iniciar la comunicación serie para depuración
   Serial.begin(115200);
-  
-  #ifdef ESP8266
-    configTime(0, 0, "pool.ntp.org");
-    client.setTrustAnchors(&cert);
-  #endif
 
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, ledState);
-
-  WiFi.mode(WIFI_STA);
+  // Conectar a la red WiFi
   WiFi.begin(ssid, password);
-  #ifdef ESP32
-    client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
-  #endif
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Conectando a WiFi...");
+    Serial.println("Conectando a la red WiFi...");
   }
-  Serial.println(WiFi.localIP());
+  Serial.println("Conectado a la red WiFi");
+
+  // Configurar las rutas del servidor web
+  server.on("/encender", HTTP_GET, handleEncender);
+  server.on("/apagar", HTTP_GET, handleApagar);
+  server.on("/apagar", HTTP_OPTIONS, handleCors);
+  server.on("/encender", HTTP_OPTIONS, handleCors);
+
+  // Iniciar el servidor web
+  server.begin();
+  Serial.println("Servidor web iniciado");
 }
 
 void loop() {
-  if (millis() > lastTimeBotRan + botRequestDelay)  {
-    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-
-    while(numNewMessages) {
-      Serial.println("respuesta recibida");
-      handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    }
-    lastTimeBotRan = millis();
-  }
+  // Manejar las solicitudes de los clientes
+  server.handleClient();
 }
