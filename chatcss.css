@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f7f7f7; /* Color de fondo claro */
+}
+
+.wrapper {
+    width: 600px; /* Ajusta el ancho de la interfaz */
+    max-width: 90%; /* Ajusta el ancho máximo a un 90% del ancho de la ventana */
+    border-radius: 8px; /* Agrega bordes redondeados */
+    overflow: hidden; /* Oculta el contenido que sobresale */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Agrega una sombra sutil */
+}
+
+.wrapper .title {
+    background: #007bff;
+    color: white;
+    line-height: 2.5;
+    border-radius: 5px 5px 0 0;
+    text-align: center;
+    font-size: 20px;
+    padding: 10px; /* Agrega padding a la barra de título */
+}
+
+.wrapper .box {
+    border: none; /* Elimina el borde */
+    padding: 15px; /* Aumenta el padding */
+    height: 450px; /* Aumenta la altura */
+    max-height: 450px; /* Ajusta la altura máxima */
+    overflow-y: auto; /* Permite scroll vertical */
+    background-color: white; /* Fondo blanco para un mejor contraste */
+}
+
+.wrapper .box .item {
+    display: flex;
+    flex-direction: row; /* Alinea los elementos horizontalmente */
+    margin: 10px 0;
+}
+
+.wrapper .box .item .icon {
+    background: #007bff;
+    color: white;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 50%; /* Mantiene el estilo del icono */
+    margin-right: 10px; /* Espacio entre el icono y el mensaje */
+}
+
+.wrapper .box .item .msg {
+    background: #007bff;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 400px; /* Limita el ancho de los mensajes */
+    word-wrap: break-word; /* Permite que el texto se ajuste */
+    margin-right: 10px;
+}
+
+.wrapper .box .item .msg p {
+    margin: 0; /* Elimina el margin en los párrafos */
+}
+
+.wrapper .box .item.right {
+    flex-direction: row-reverse; /* Invertir la dirección de los elementos */
+    text-align: right; /* Alinea los elementos a la derecha */
+}
+
+.wrapper .box .item.right .msg {
+    background: #efefef;
+    color: #333;
+    max-width: 300px; /* Limita el ancho de los mensajes */
+    margin-left: 10px; /* Espacio entre el mensaje y el icono */
+}
+
+.wrapper .typing-area {
+    width: 100%;
+    background: #efefef;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+.wrapper .typing-area .input-field {
+    width: 100%;
+    position: relative;
+}
+
+.wrapper .typing-area .input-field input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    outline: none;
+    padding-right: 70px;
+    font-family: 'Poppins', sans-serif;
+    transition: 0.3s all ease;
+}
+
+.wrapper .typing-area .input-field input:focus {
+    border-color: #007bff;
+}
+
+.wrapper .typing-area .input-field button {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 1px solid #007bff;
+    padding: 5px 10px;
+    border-radius: 3px;
+    color: #007bff;
+    outline: none;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s all ease;
+}
+
+.wrapper .typing-area .input-field button:hover {
+    background: #007bff;
+    color: white;
+}
+
+.wrapper .typing-area .input-field input:valid ~ button {
+    opacity: 1;
+    pointer-events: auto;
+}
+
