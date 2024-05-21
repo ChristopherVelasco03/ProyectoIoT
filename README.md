@@ -138,6 +138,8 @@ La validación del modelo se realiza probando diferentes comandos para garantiza
 
 La interfaz de usuario en este proyecto se basa en la comunicación por chat con la IA de Gemini, que es intuitiva y fácil de usar.
 
+![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/3d26c889-fc75-4167-b0a4-73e750ba0b6f)
+
 ### Implementación de Notificaciones
 
 Las notificaciones y alertas no son necesarias en este caso, ya que el control es en tiempo real y directo a través de comandos.
@@ -147,6 +149,14 @@ Las notificaciones y alertas no son necesarias en este caso, ya que el control e
 ### Pruebas Funcionales
 
 Se han realizado pruebas exhaustivas para asegurar que los comandos sean interpretados correctamente y que el LED responda adecuadamente, encendiéndose y apagándose según los comandos.
+
+![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/8170c1db-0497-48b7-9594-9818d97139c7)
+
+![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/ea6c2b1c-f397-4002-999d-42d585b6bd0e)
+
+![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/98feb47e-aea8-4f06-ae95-57ef610e49c1)
+
+![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/20540eaa-11a8-498c-9c1b-cf7ca13087ca)
 
 ### Precisión del Modelo
 
