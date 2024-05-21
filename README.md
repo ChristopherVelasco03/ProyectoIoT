@@ -2,178 +2,155 @@
 
 ¡Bienvenido a tu nuevo proyecto de bot en Telegram! Este bot se hace pasar por una IA y permite a los usuarios interactuar con él para controlar un LED integrado. Usa comandos sencillos como `ledon` y `ledoff` para encender y apagar el LED. ¡Sigue leyendo para más detalles!
 
-## 📋 Descripción del Proyecto
+# Proyecto NodeMCU 8266 y Gemini IA para Control de Iluminación
 
-Este proyecto utiliza un ESP32 o ESP8266 para conectarse a Wi-Fi y controlar un LED mediante comandos enviados a través de un bot de Telegram. El bot responde a comandos específicos para encender, apagar y verificar el estado del LED.
+## 1. Definición del Proyecto
 
-## 🚀 Comenzando
+Este proyecto tiene como objetivo proporcionar un sistema de control de iluminación inteligente y eficiente energéticamente utilizando la placa NodeMCU 8266 y la inteligencia artificial de Gemini. Los usuarios pueden controlar la iluminación a través de comandos de voz dirigidos a la IA, permitiendo encender y apagar luces de manera sencilla y eficaz.
 
-### Requisitos
+### Claridad y Relevancia del Objetivo
 
-- Una placa ESP32 o ESP8266
-- Conexión a Internet
-- Cuenta de Telegram
+El objetivo de este proyecto es crear un sistema de control de iluminación que no solo sea fácil de usar, sino que también promueva el ahorro de energía. Esto es relevante tanto desde un punto de vista tecnológico, al integrar IA y IoT, como social, al contribuir a la eficiencia energética y la comodidad en el hogar.
 
-### Configuración
+### Innovación y Aplicabilidad
 
-1. **Clona el repositorio:**
-   ```bash
-   git clone https://github.com/tu-usuario/tu-repo.git
-   cd tu-repo
-   ```
+Este proyecto ofrece una solución innovadora al combinar el control por voz mediante IA con un sistema de iluminación basado en IoT. Sus aplicaciones prácticas incluyen hogares inteligentes y sistemas de gestión de edificios, proporcionando un acceso conveniente y un uso eficiente de los recursos energéticos.
 
-2. **Instala las librerías necesarias:**
-   - [Universal Telegram Bot Library](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot)
-   - [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+## 2. Materiales Necesarios
 
-3. **Configura las credenciales Wi-Fi y el token del bot:**
-   En el archivo `main.ino`, reemplaza las siguientes líneas con tus credenciales:
-   ```cpp
-   const char* ssid = "TU_SSID";
-   const char* password = "TU_PASSWORD";
-   #define BOTtoken "TU_BOT_TOKEN"  // Token del bot de Telegram
-   #define CHAT_ID "TU_CHAT_ID"  // ID del chat de Telegram
-   ```
+### Lista Completa de Materiales
 
-### Uso y ejemplo
+- Placa NodeMCU 8266
+- Conexión a Internet (Wi-Fi)
+- Cable de datos USB para NodeMCU
 
-Carga el código en tu ESP32 o ESP8266 y abre el monitor serie para ver los mensajes de depuración. Asegúrate de que tu dispositivo esté conectado a la red Wi-Fi.
+### Disponibilidad y Coste
 
-![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/4b6ceb3f-7fbf-44e6-aaca-fe37f9e03f8f)
+Todos los materiales mencionados son fácilmente accesibles y de bajo costo. La placa NodeMCU 8266 es económica y ampliamente disponible en tiendas de electrónica y en línea.
 
-![image](https://github.com/ChristopherVelasco03/ProyectoIoT/assets/155390541/41ad8471-c913-4563-b7e3-7a8e04c4d7d0)
+## 3. Configuración del Hardware
 
-### Comandos del Bot
+### Conexión y Configuración de Sensores
 
-- `/start` - Muestra un mensaje de bienvenida y lista de comandos.
-- `/led_on` - Enciende el LED.
-- `/led_off` - Apaga el LED.
-- `/state` - Muestra el estado actual del LED (encendido/apagado).
+En este proyecto, la NodeMCU 8266 no requiere sensores adicionales, ya que su función principal es controlar la iluminación mediante comandos a través de la IA de Gemini. A continuación se detallan las conexiones básicas:
 
-## 🔧 Código
+- **LED Integrado en NodeMCU**: Conectado a través del pin D0 (GPIO16).
+
+### Programación del Microcontrolador
+
+La NodeMCU 8266 se programa para recibir comandos de la IA y controlar el estado del LED. El código puede ser escrito en Arduino IDE, utilizando la biblioteca ESP8266WiFi para la conexión a Internet y la API de Gemini para recibir los comandos.
 
 ```cpp
-#ifdef ESP32
-  #include <WiFi.h>
-#else
-  #include <ESP8266WiFi.h>
-#endif
-#include <WiFiClientSecure.h>
-#include <UniversalTelegramBot.h>   
-#include <ArduinoJson.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
 
-const char* ssid = "TU_SSID";
-const char* password = "TU_PASSWORD";
-#define BOTtoken "TU_BOT_TOKEN"
-#define CHAT_ID "TU_CHAT_ID"
+// SSID y contraseña de tu red WiFi
+const char* ssid = "";  // Reemplaza con tu SSID
+const char* password = "";  // Reemplaza con tu contraseña
 
-#ifdef ESP8266
-  X509List cert(TELEGRAM_CERTIFICATE_ROOT);
-#endif
+// Definición del pin GPIO al que está conectada la luz
+const int LED_PIN = 2;  // Cambia esto según el pin que estés usando
 
-WiFiClientSecure client;
-UniversalTelegramBot bot(BOTtoken, client);
-int botRequestDelay = 1000;
-unsigned long lastTimeBotRan;
-const int ledPin = 2;
-bool ledState = LOW;
+ESP8266WebServer server(80);
 
-void handleNewMessages(int numNewMessages) {
-  Serial.println("handleNewMessages");
-  Serial.println(String(numNewMessages));
+// Función para manejar CORS
+void handleCors() {
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.sendHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  server.sendHeader("Access-Control-Allow-Headers", "Content-Type");
+  server.send(204);  // Sin contenido para las solicitudes OPTIONS
+}
 
-  for (int i=0; i<numNewMessages; i++) {
-    String chat_id = String(bot.messages[i].chat_id);
-    if (chat_id != CHAT_ID){
-      bot.sendMessage(chat_id, "Usuario no autorizado", "");
-      continue;
-    }
+// Función para manejar la solicitud de encender la luz
+void handleEncender() {
+  digitalWrite(LED_PIN, HIGH);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/plain", "Luz encendida");
+}
 
-    String text = bot.messages[i].text;
-    Serial.println(text);
-    String from_name = bot.messages[i].from_name;
-
-    if (text == "/start") {
-      String welcome = "Bienvenido, " + from_name + ".\n";
-      welcome += "Usa los siguientes comandos para controlar el LED.\n\n";
-      welcome += "/led_on para encender el LED \n";
-      welcome += "/led_off para apagar el LED \n";
-      welcome += "/state para ver el estado actual del LED \n";
-      bot.sendMessage(chat_id, welcome, "");
-    }
-
-    if (text == "/led_on") {
-      bot.sendMessage(chat_id, "LED encendido", "");
-      ledState = HIGH;
-      digitalWrite(ledPin, ledState);
-    }
-
-    if (text == "/led_off") {
-      bot.sendMessage(chat_id, "LED apagado", "");
-      ledState = LOW;
-      digitalWrite(ledPin, ledState);
-    }
-
-    if (text == "/state") {
-      if (digitalRead(ledPin)){
-        bot.sendMessage(chat_id, "El LED está encendido", "");
-      } else {
-        bot.sendMessage(chat_id, "El LED está apagado", "");
-      }
-    }
-  }
+// Función para manejar la solicitud de apagar la luz
+void handleApagar() {
+  digitalWrite(LED_PIN, LOW);
+  server.sendHeader("Access-Control-Allow-Origin", "*");
+  server.send(200, "text/plain", "Luz apagada");
 }
 
 void setup() {
+  // Inicializar el pin GPIO para la luz
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW); // Asegúrate de que la luz está apagada al inicio
+
+  // Iniciar la comunicación serie para depuración
   Serial.begin(115200);
-  
-  #ifdef ESP8266
-    configTime(0, 0, "pool.ntp.org");
-    client.setTrustAnchors(&cert);
-  #endif
 
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, ledState);
-
-  WiFi.mode(WIFI_STA);
+  // Conectar a la red WiFi
   WiFi.begin(ssid, password);
-  #ifdef ESP32
-    client.setCACert(TELEGRAM_CERTIFICATE_ROOT);
-  #endif
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
-    Serial.println("Conectando a WiFi...");
+    Serial.println("Conectando a la red WiFi...");
   }
-  Serial.println(WiFi.localIP());
+  Serial.println("Conectado a la red WiFi");
+
+  // Configurar las rutas del servidor web
+  server.on("/encender", HTTP_GET, handleEncender);
+  server.on("/apagar", HTTP_GET, handleApagar);
+  server.on("/apagar", HTTP_OPTIONS, handleCors);
+  server.on("/encender", HTTP_OPTIONS, handleCors);
+
+  // Iniciar el servidor web
+  server.begin();
+  Serial.println("Servidor web iniciado");
 }
 
 void loop() {
-  if (millis() > lastTimeBotRan + botRequestDelay)  {
-    int numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-
-    while(numNewMessages) {
-      Serial.println("respuesta recibida");
-      handleNewMessages(numNewMessages);
-      numNewMessages = bot.getUpdates(bot.last_message_received + 1);
-    }
-    lastTimeBotRan = millis();
-  }
+  // Manejar las solicitudes de los clientes
+  server.handleClient();
 }
 ```
 
-## 🤝 Contribuciones
+## 4. Almacenamiento de Datos
 
-¡Las contribuciones son bienvenidas! Si tienes alguna mejora o nueva funcionalidad que te gustaría añadir, por favor abre un issue o envía un pull request.
+### Estructura de la Base de Datos
 
-## 📄 Licencia
+En este proyecto, no se requiere una base de datos compleja. Los datos relevantes son los comandos recibidos y el estado del LED (encendido/apagado), los cuales pueden ser almacenados en variables locales en el microcontrolador.
 
-Este proyecto está bajo la Licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
+### Conexión y Almacenamiento de Datos
 
-## 🌟 Agradecimientos
+La conexión y almacenamiento de los datos se maneja localmente en la NodeMCU, y los comandos de la IA se procesan en tiempo real.
 
-- [Brian Lough](https://github.com/witnessmenow) por la fantástica [librería Universal Telegram Bot](https://github.com/witnessmenow/Universal-Arduino-Telegram-Bot).
+## 5. Desarrollo del Modelo de IA
 
+### Preparación de Datos
+
+La preparación de datos en este contexto implica asegurar que los comandos sean interpretados correctamente por la IA de Gemini.
+
+### Selección y Entrenamiento del Modelo
+
+El modelo de IA utilizado por Gemini está preentrenado para interpretar comandos específicos como "encender la luz" y "apagar la luz".
+
+### Validación y Ajuste del Modelo
+
+La validación del modelo se realiza probando diferentes comandos para garantizar que la IA responda adecuadamente y controle el LED según lo esperado.
+
+## 6. Desarrollo de la Interfaz de Usuario
+
+### Diseño de la Interfaz
+
+La interfaz de usuario en este proyecto se basa en la comunicación por chat con la IA de Gemini, que es intuitiva y fácil de usar.
+
+### Implementación de Notificaciones
+
+Las notificaciones y alertas no son necesarias en este caso, ya que el control es en tiempo real y directo a través de comandos.
+
+## 7. Pruebas y Validación
+
+### Pruebas Funcionales
+
+Se han realizado pruebas exhaustivas para asegurar que los comandos sean interpretados correctamente y que el LED responda adecuadamente, encendiéndose y apagándose según los comandos.
+
+### Precisión del Modelo
+
+La IA de Gemini ha demostrado ser precisa en la interpretación de comandos de voz bajo diferentes condiciones, garantizando un control confiable del sistema de iluminación.
+
+-----
 ¡Gracias por usar este proyecto! Si tienes alguna pregunta o necesitas ayuda, no dudes en contactarme.
-
----
-¡Diviértete controlando tu LED con Telegram! 🚀💡
