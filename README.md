@@ -126,7 +126,7 @@ La preparación de datos en este contexto implica asegurar que los comandos sean
 
 ### Selección y Entrenamiento del Modelo
 
-El modelo de IA utilizado por Gemini está preentrenado para interpretar comandos específicos como "encender la luz" y "apagar la luz".
+El modelo de IA utilizado por Gemini está preentrenado para interpretar el como encender la luz y apagar la luz.
 
 ### Validación y Ajuste del Modelo
 
