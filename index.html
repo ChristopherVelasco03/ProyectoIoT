@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+    <link rel="stylesheet" href="chatcss.css">
+    <title>Chatbot - Brave Coder</title>
+    <script type="importmap">
+        {
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="title">Recomendador Chatbot</div>
+        <div class="box" id="chatbox">
+            <!-- Aquí se mostrarán los mensajes -->
+        </div>
+        
+        <div class="typing-area">
+            <div class="input-field">
+                <input type="text" id="userInput" placeholder="Type your message" required>
+                <button id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar Google Generative AI
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        $(document).ready(function() {
+            // Configurar tu clave de API
+            const API_KEY = ""; // Reemplaza con tu clave de API
+
+            // Inicializar Google Generative AI
+            const genAI = new GoogleGenerativeAI(API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+            // Configuración de generación
+            const generationConfig = {
+                temperature: 1,
+                topK: 0,
+                topP: 0.95,
+                maxOutputTokens: 8192,
+            };
+
+            // Configuración de seguridad
+            const safetySettings = [
+                {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                },
+                {
+                    category: "HARM_CATEGORY_HATE_SPEECH",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                },
+                {
+                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                },
+                {
+                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                },
+            ];
+
+            // Inicializar el chat con el modelo
+            const chat = model.startChat({
+                generationConfig,
+                safetySettings,
+                history: [
+                    {
+                        role: "user",
+                        parts: [{ text: "Cada que el usuario te pida del alguna manera o insinue encender el LED o luz. tu responderas con la palabra clave, Entendido, encenderé el LED" }],
+                    },
+                    {
+                        role: "model",
+                        parts: [{ text: "Entendido, encenderé el LED." }],
+                    },
+                    {
+                        role: "user",
+                        parts: [{ text: "Cada que el usuario te pida del alguna manera o insinue apagar el LED o luz. tu responderas con la palabra clave, Entendido, apagaré el LED" }],
+                    },
+                    {
+                        role: "model",
+                        parts: [{ text: "Entendido, apagaré el LED." }],
+                    },
+                ],
+            });
+
+            // Manejar el evento de clic en el botón Send
+            $('#sendButton').click(async function() {
+                // Obtener el mensaje del usuario
+                const userMessage = $('#userInput').val();
+
+                // Mostrar el mensaje del usuario en la interfaz
+                $('#chatbox').append('<div class="item right"><div class="msg"><p>' + userMessage + '</p></div></div>');
+
+                // Limpiar el campo de entrada
+                $('#userInput').val('');
+
+                // Obtener la respuesta del chatbot
+                obtenerRespuestaDelChatbot(chat, userMessage);
+
+                // Enviar el mensaje al bot de Telegram
+                //sendMessageToTelegram(userMessage);
+            });
+            
+            // Manejar el evento de presionar la tecla "Enter" en el campo de entrada
+            $('#userInput').on('keydown', function(event) {
+                // Verificar si se presionó la tecla "Enter" (código de tecla 13)
+                if (event.keyCode === 13) {
+                    // Evitar el comportamiento predeterminado (evitar que se envíe un formulario)
+                    event.preventDefault();
+
+                    // Simular un clic en el botón Send
+                    $('#sendButton').click();
+                }
+            });
+
+            // Función para obtener la respuesta del chatbot
+            async function obtenerRespuestaDelChatbot(chat, userMessage) {
+                try {
+                    // Enviar el mensaje al chat
+                    const result = await chat.sendMessage(userMessage);
+                    const response = await result.response.text();  // Esperar a que se resuelva el texto de la respuesta
+
+                    // Mostrar la respuesta del chatbot en la interfaz
+                    $('#chatbox').append('<div class="item"><div class="icon"><i class="fa fa-user"></i></div><div class="msg"><p>' + response + '</p></div></div>');
+
+                    // Detectar palabras clave en la respuesta del chatbot
+                    if (response.includes("Entendido, encenderé el LED")) {
+                        // Aquí puedes realizar la acción correspondiente para encender el LED
+                        console.log("Encender el LED");
+                        await fetch('http://192.168.100.85/encender');  // Reemplaza <ESP8266_IP> con la IP de tu ESP8266
+                    } else if (response.includes("Entendido, apagaré el LED")) {
+                        // Aquí puedes realizar la acción correspondiente para apagar el LED
+                        console.log("Apagar el LED");
+                        await fetch('http://192.168.100.85/apagar');  // Reemplaza <ESP8266_IP> con la IP de tu ESP8266
+                    }
+                } catch (error) {
+                    // Manejar errores
+                    $('#chatbox').append('<div class="item"><div class="icon"><i class="fa fa-user"></i></div><div class="msg"><p>Lo siento, hubo un error al obtener la respuesta del chatbot.</p></div></div>');
+                }
+            }
+            
+            // Función para enviar un mensaje al bot de Telegram
+
+        });
+    </script>
+</body>
+</html>
